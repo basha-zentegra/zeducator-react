@@ -1,0 +1,10 @@
+{
+    "plugin": {
+      "name": "Zedu Widget",
+      "version": "1.0",
+      "index": "index.html",
+      "platform": "creator",
+      "pluginType": "internal"
+    }
+  }
+  

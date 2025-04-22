@@ -14,14 +14,14 @@
 .card-body .nav-link{
     background-color: #884dfd;
     margin: 5px;
-    border-radius: 20px;
+    border-radius: 20px !important;
     /* background-color:  #9E9FC6; */
     /* color: black !important; */
 
 }
 
 .card-body  .nav-link.active {
-    background-color: #6f2cf6;
+    background-color: #6f2cf6 !important;
     font-weight: 600;
     color: white !important;
     scale: 1.1;

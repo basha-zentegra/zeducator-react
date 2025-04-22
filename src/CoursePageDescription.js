@@ -50,7 +50,7 @@ function CoursePageDescription(){
                 </ul>
                 <div className="tab-content mt-3">
                     
-                    <div className="tab-pane fade active" id="subtasks" >
+                    <div className="tab-pane fade active show" id="subtasks" >
                         ppt 
                     </div>
                     

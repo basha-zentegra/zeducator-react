@@ -2,17 +2,21 @@ import React from "react";
 import ProductCard from "./ProductCard";
 import { motion } from "framer-motion";
 
-function MyCourse({courses}){
-    console.log("MyCourse - courses:", courses);
+function MyCourse({courses, lessons, topics}){
+    // console.log("MyCourse - courses:", courses);
+    const MyCourse = courses.filter(c =>
+        c.Purchased === "true"
+    );
     return(
-        <div className="container mt-3">
+        <div className="container mt-3 mb-5 pb-5">
             
-            <h1 className="text-center mt-2">My <span style={{color:"#702DF5 "}}> Space </span>  </h1> <br/> 
+            <h1 className="text-center my-4">My <span style={{color:"#702DF5 "}}> Space </span>  </h1> <br/> 
             
                 <div className="row g-5 ">
-                { courses && courses.length > 0 ? (
-                courses.slice(0, 5).map((course, index) => (
-                    <ProductCard key={index} product={course} />
+                { MyCourse && MyCourse.length > 0 ? (
+                MyCourse.map((course, index) => (
+                    
+                    <ProductCard key={index} product={course} lessons={lessons} topics={topics} />
                 ))
                 ) : (
                 <p>Loading products...</p>

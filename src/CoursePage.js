@@ -7,8 +7,13 @@ import { useContext } from "react";
 import { useState } from "react";
 import CoursePageDescription from "./CoursePageDescription";
 import { useEffect } from "react";
+import { motion } from "framer-motion";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import { Tooltip } from 'bootstrap'; // 👈 this line fixes the error
+import './CoursePage.css'
 
-function CoursePage({ lessons, topics, onScoreUpdate  ,  isZohoInitialized, UpdateWatched={UpdateWatched}}) {
+function CoursePage({ lessons, topics, onScoreUpdate, UpdateWatched={UpdateWatched}}) {
 
 
   // useEffect(() => {
@@ -17,6 +22,20 @@ function CoursePage({ lessons, topics, onScoreUpdate  ,  isZohoInitialized, Upda
       
   //   }
   // }, [isZohoInitialized]);
+
+  // import { Tooltip } from 'bootstrap';
+
+  useEffect(() => {
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    const tooltipList = [...tooltipTriggerList].map(
+      (tooltipTriggerEl) => new Tooltip(tooltipTriggerEl)
+    );
+  
+    return () => {
+      // Cleanup tooltips when component unmounts
+      tooltipList.forEach((tooltip) => tooltip.dispose());
+    };
+  }, [lessons]); // Or whatever dynamic list updates tooltips
 
 
 
@@ -34,16 +53,28 @@ function CoursePage({ lessons, topics, onScoreUpdate  ,  isZohoInitialized, Upda
   );
 
   const allTopics = filteredLessons.flatMap((lesson) =>
-    topics.filter((topic) => topic.CRM_Topics.display_value === lesson.Topic)
+    topics.filter((topic) => topic.CRM_Topics.display_value === lesson.Topic).reverse()
   );
 
+  // const allTopics = allTopics1.reverse()
+  
+
+  console.log("all topics----->", allTopics)
+
   const watchedCount = allTopics.filter(topic => topic.Watched === "true").length;
+
   useEffect(() => {
     onScoreUpdate(watchedCount);
   }, [watchedCount, onScoreUpdate]);
 
+  function calculatePercentage(totalTopics, watchedTopics) {
+    if (totalTopics === 0) return 0; // To handle division by zero
+    return Math.round((watchedTopics / totalTopics) * 100);
+  }
+
   // Set selected lesson from the topic index
   const selectedLessonName = allTopics[selectedIndex]?.Lesson_Name || "Select a topic";
+  const selectedLessonID = allTopics[selectedIndex]?.ID || "Noting";
 
   // const { score, increaseScore } = useContext(ScoreContext);
   const [clicked, setClicked] = useState(false);
@@ -51,7 +82,7 @@ function CoursePage({ lessons, topics, onScoreUpdate  ,  isZohoInitialized, Upda
   const handleButtonClick = () => {
     if (selectedIndex < allTopics.length - 1) {
       setSelectedIndex((prev) => prev + 1);
-      // increaseScore();
+      
     }
   };
 
@@ -62,6 +93,27 @@ function CoursePage({ lessons, topics, onScoreUpdate  ,  isZohoInitialized, Upda
   if (!UpdateWatched || typeof UpdateWatched !== "function") {
     console.error("❌ UpdateWatched function not passed properly");
   }
+
+  // local storage 
+
+  const markTopicAsWatched = (topicId) => {
+    let watched = JSON.parse(localStorage.getItem("watchedTopics")) || [];
+  
+    if (!watched.includes(topicId)) {
+      watched.push(topicId);
+      localStorage.setItem("watchedTopics", JSON.stringify(watched));
+    }
+  };
+
+  const isTopicWatched = (topicId) => {
+    const watched = JSON.parse(localStorage.getItem("watchedTopics")) || [];
+    return watched.includes(topicId);
+  };
+
+  // localStorage.removeItem("watchedTopics");
+
+  
+
 
   return (
     <div className=" mt-1 d-flex ">
@@ -74,9 +126,13 @@ function CoursePage({ lessons, topics, onScoreUpdate  ,  isZohoInitialized, Upda
           position: "fixed",
           left: "0px",
           overflowY: "auto",
+          scrollbarWidth: "thin",
+          scrollbarColor: "#9E9FC6 #f1f1f1"
         }}
       >
         {/* <button onClick={() => UpdateWatched()}>UpdateWatched</button> */}
+  
+
         <div
           className="bg-light ps-3 pe-3 pt-2 pb-2 rounded"
           style={{ width: "100%" }}
@@ -91,11 +147,21 @@ function CoursePage({ lessons, topics, onScoreUpdate  ,  isZohoInitialized, Upda
             aria-valuemin="0"
             aria-valuemax="100"
           >
-            <div className="progress-bar" style={{ width: "25%" }}></div>
+            <motion.div className="progress-bar bg-success"
+            initial={{ width: "0%" }} 
+            animate={{ width: `${calculatePercentage(allTopics.length, watchedCount)}%` }}
+            transition={{
+              type: "spring",
+              stiffness: 120,
+              
+            }}
+            
+            style={{ width: `${calculatePercentage(allTopics.length, watchedCount)}%` }}></motion.div>
           </div>
-          <p>25% Compleated</p>
+          <p style={{fontSize:"14px"}} className="fw-semibold">{calculatePercentage(allTopics.length, watchedCount)}% Completed</p>
         </div>
         <br />
+        
         <div
           className="accordion accordion-flush rounded rounded"
           id="accordionFlushExample"
@@ -121,11 +187,11 @@ function CoursePage({ lessons, topics, onScoreUpdate  ,  isZohoInitialized, Upda
               <div className="accordion-body p-1">
                 <ul className="list-group  mx-auto">
                   {/* {console.log(lessons)} */}
-                  {console.log("toooopics", topics)}
+                  {/* {console.log("toooopics", topics)} */}
 
-                  {console.log(
+                  {/* {console.log(
                     lessons.map((lesson) => lesson.Our_Services?.display_value)
-                  )}
+                  )} */}
 
                   {lessons?.length > 0 ? (
                     lessons
@@ -139,10 +205,12 @@ function CoursePage({ lessons, topics, onScoreUpdate  ,  isZohoInitialized, Upda
                           (topic) =>
                             topic.CRM_Topics.display_value === lesson.Topic
                         );
+                        console.log("--------------");
+                        matchingTopics.map(m => console.log("m--",index));
 
                         return (
                           <div key={index} className="list-group-item p-1">
-                            <div className="accordion" id="accordionExample">
+                            <div className="accordion" id={`accordion-${index}`}>
                               <div className="accordion-item">
                                 <h2 className="accordion-header">
                                   <button
@@ -150,40 +218,63 @@ function CoursePage({ lessons, topics, onScoreUpdate  ,  isZohoInitialized, Upda
                                     type="button"
                                     data-bs-toggle="collapse"
                                     data-bs-target={`#collapse-${index}`}
-                                    aria-expanded="true"
-                                    aria-controls="collapseOne"
+                                    // aria-expanded="true"
+                                    // data-bs-toggle="tooltip"
+                                    aria-controls={`collapse-${index}`}
+                                    data-bs-placement="right"
+                                    title={lesson.Description}
+                                    data-bs-custom-class="my-custom-tooltip"
                                   >
-                                    {lesson.Topic}
+                                    {index+1}. {lesson.Topic}
                                   </button>
                                 </h2>
                                 <div
                                   id={`collapse-${index}`}
                                   className="accordion-collapse collapse"
-                                  data-bs-parent="#accordionExample"
+                                  data-bs-parent={`#accordion-${index}`}
                                 >
                                   <div className="accordion-body p-2">
                                    
                                       {matchingTopics.length > 0 ? (
-                                        matchingTopics.map((topic, i) => (
-                                          <div className="">
+                                        matchingTopics.reverse().map((topic) => {
+
+                                          const globalIndex = allTopics.findIndex(t => t.ID === topic.ID);
+                                          const canClick =
+                                            globalIndex === 0 || isTopicWatched(allTopics[globalIndex - 1]?.ID);
+
+                                            return (
+                                          
+                                          <div key={topic.ID} >
                                            
                                           <a
-                                            style={{ fontSize: "14px", fontWeight:"500", cursor: "pointer" }}
-                                            key={i}
-                                            // onClick={() => setSelectedIndex(i)}
+                                            style={{ 
+                                              fontSize: "14px",
+                                              fontWeight: "500",
+                                              cursor: canClick ? "pointer" : "not-allowed",
+                                              pointerEvents: canClick ? "auto" : "none",
+                                              opacity: canClick ? 1 : 0.5,
+                                            }}
+                                            
+                                            
                                             onClick={() => {
-                                              const globalIndex = allTopics.findIndex(t => t.ID === topic.ID); // assuming topic.ID is unique
+                                              // const globalIndex = allTopics.findIndex(t => t.ID === topic.ID); // assuming topic.ID is unique
                                               setSelectedIndex(globalIndex);
+                                              
                                             }}
                                             className="d-flex  text-decoration-none text-black mb-2 mt-1"
                                           >
-                                             {topic.Watched === "true" ? (<span style={{fontSize:"20px", color:"#1F7D53"}}><i className="bi bi-check-circle me-2"></i> </span>) : (<span style={{fontSize:"20px"}}><i className="bi bi-check-circle me-2"></i> </span>)}
+                                             {/* {topic.Watched === "true" ? (<span style={{fontSize:"20px"}}><i className="bi bi-check-circle me-2 text-success"></i> </span>) : (<span style={{fontSize:"20px"}}><i className="bi bi-check-circle me-2"></i> </span>)} */}
+                                             {isTopicWatched(topic.ID) ? (<span style={{fontSize:"20px"}}><i className="bi bi-check-circle me-2 text-success"></i> </span>) : (<span style={{fontSize:"20px"}}><i className="bi bi-check-circle me-2"></i> </span>) }
+                                             
                                              {topic.Lesson_Name}
-                                             <button onClick={() => UpdateWatched(topic.ID)}>Mark Watched</button>
+                                             {/* <button className="btn btn-primary btn-sm" onClick={() => UpdateWatched(topic.ID)}>Mark Watched</button> */}
+                                             {/* <button onClick={() => markTopicAsWatched(topic.ID)}>Done</button> */}
+                                             {/* {isTopicWatched(topic.ID) && <span>✅</span>} */}
 
                                           </a>
                                           </div>
-                                        ))
+                                            );
+                                          })
                                       ) : (
                                         <p style={{ fontSize: "14px" }}>
                                           No lesson names
@@ -213,7 +304,13 @@ function CoursePage({ lessons, topics, onScoreUpdate  ,  isZohoInitialized, Upda
         <div className="card">
           <div className="card-header d-flex justify-content-between align-items-center text-white" style={{backgroundColor: "#6f2cf6"}}>
             <h5>{selectedIndex + 1}. {selectedLessonName}</h5>
-            <button className="btn btn-primary" onClick={handleButtonClick}>
+            <button className="btn btn-primary" 
+            onClick={ () => {
+              handleButtonClick();
+              markTopicAsWatched(selectedLessonID);
+               }
+             
+              }>
               Next
             </button>
           </div>
@@ -243,4 +340,4 @@ function CoursePage({ lessons, topics, onScoreUpdate  ,  isZohoInitialized, Upda
 
 export default CoursePage;
 
- 
+

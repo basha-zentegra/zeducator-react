@@ -7,12 +7,15 @@ import CoursePage from "./CoursePage";
 import UserProfile from "./UserProfile";
 import LessonList from "./LessonList";
 import CourseList from "./CourseList";
-
-import { useContext } from "react";
-// import { ScoreContext, ScoreProvider } from "./ScoreContext";
 import MyCourse from "./MyCourse";
 import PricingPage from "./PricingPage";
 import { useLocation } from "react-router-dom";
+
+import ScrollToTop from "./ScrollToTop";
+
+import ProfileModal from "./ProfileModal";
+
+import {motion} from "framer-motion";
 
 function App() {
   const location = useLocation();
@@ -22,10 +25,7 @@ function App() {
   const [profiles, setProfiles] = useState([]);
   const [courses, setCourses] = useState([]);
   const [topics, setTopics] = useState([]);
-
-  // const { score } = useContext(ScoreContext); 
-
-  // Score
+  const [membership, setMembership] = useState([]);
   const [totalScore, setTotalScore] = useState(0);
 
   const handleScoreUpdate = (score) => {
@@ -107,15 +107,26 @@ function App() {
         setCourses(response?.data || []);
       })
       .catch((error) => console.error("❌ Error Fetching Courses:", error))
-   
 
+      // Fetch all Packages
+    const PackageConfig ={
+      appName: "zeducator",
+      reportName: "All_Packages"
+    };
+
+    window.ZOHO.CREATOR.API.getAllRecords(PackageConfig)
+      .then((response) => {
+        console.log("✅ Package Response:", response);
+        setMembership(response?.data || []);
+      })
+      .catch((error) => console.error("❌ Error Fetching Courses:", error))
 
   };
     const UpdateWatched = (recordId) =>{
     
           var formData = {
             "data" : {
-              "Watched": false 
+              "Watched": true 
             }
           }
 
@@ -150,16 +161,6 @@ function App() {
             console.error("❌ Unexpected error:", err);
           }
         }
-        
-    
-        // if (window.ZOHO && isZohoInitialized) {
-        //   window.ZOHO.CREATOR.API.updateRecord(scoreUpdateConfig)
-        //     .then((res) => console.log("✅ Updated:", res))
-        //     .catch((err) => console.error("❌ Update Error:", err));
-        // } else {
-        //   console.error("❌ ZOHO not initialized yet");
-        // }
-
 
     
       };
@@ -169,12 +170,14 @@ function App() {
         UpdateWatched(recordId);
       };
 
-  
+
+
   
 
   return (
     
       <div>
+        <ScrollToTop />
         <nav style={{ 
           padding: "10px 20px", 
           display: "flex", 
@@ -194,28 +197,53 @@ function App() {
               <Link className="nav-link" to="/">Home</Link>
               <Link className="nav-link" to="/about">About</Link>
               <Link className="nav-link" to="/contact">Contact</Link>
-              <Link className="nav-link" to="/profile">Profile</Link>
+              
               <Link className="nav-link" to="/courses">All Course</Link>        
-              <button  disabled={!isZohoInitialized} onClick={() => triggerUpdateWatched()}>UpdateWatched</button>
+              {/* <button className="btn btn-primary"  disabled={!isZohoInitialized} onClick={() => triggerUpdateWatched()}>UpdateWatched</button> */}
             </div>
-          
+
+            <div className="d-flex align-items-center ">
+              
+              <div className="me-3">
+              {showScoreButton && (
+              <button className="btn btn-light" style={{ 
+                padding: "8px 15px", 
+                fontSize: "16px", 
+                fontWeight: "bold", 
+                borderRadius: "5px",
+                color:"#6F2CF6"
+              }}>
+                Score: {totalScore}
+              </button>
+              )}
+              </div>
+              {/* <Link className="nav-link" to="/profile">
+              {profiles.map((n, i) => (
+                <motion.img 
+
+                  initial={{opacity:0}}
+                  animate={{opacity:1}}
+                  whileHover={{scale:1.3}}
+                  transition={{type:"spring", stiffness:300, duration: Infinity}}
+                  key={i}
+                  src={`https://creatorapp.zoho.com${n.photo}`}
+                  alt={`Profile ${i}`}
+                  style={{ width: "30px", height: "30px" , borderRadius:"50px"}}
+                />
+              ))}
+
+              <p style={{fontSize:"12px"}} className="m-0 p-0 fw-semibold text-center">{profiles.map(n => n.Name)}</p>
+              
+              </Link> */}
+              <ProfileModal profiles={profiles} />
+
+            </div>
             
-            {showScoreButton && (
-            <button className="btn btn-light" style={{ 
-              padding: "8px 15px", 
-              fontSize: "16px", 
-              fontWeight: "bold", 
-              borderRadius: "5px",
-              color:"#6F2CF6"
-            }}>
-              Score: {totalScore}
-            </button>
-          )}
         </nav>
 
         <div style={{ paddingTop: "55px" }}>
           <Routes>
-            <Route path="/" element={<Home courses={courses} />} />
+            <Route path="/" element={<Home courses={courses} lessons={lessons} topics={topics} />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/course" element={<CoursePage lessons={lessons} topics={topics} onScoreUpdate={handleScoreUpdate} isZohoInitialized={isZohoInitialized}  UpdateWatched={UpdateWatched}/>} />
@@ -223,7 +251,7 @@ function App() {
             <Route path="/lessons" element={<LessonList lessons={lessons} />} />
             <Route path="/courses" element={<CourseList courses={courses} lessons={lessons}/>} />
             <Route path="/my-courses"  element={<MyCourse courses={courses} />} /> 
-            <Route path="/pricing"  element={<PricingPage/>} /> 
+            <Route path="/pricing"  element={<PricingPage membership={membership}/>} /> 
           </Routes>
         </div>
       </div>

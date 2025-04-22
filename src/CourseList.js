@@ -5,7 +5,9 @@ import ProductCardAllCourses from "./ProductCardAllCourses";
 
 const CourseList = ({ courses = [], lessons = [] }) => {
     return (
-        <div className="container mt-3">
+        <div className="container mt-3 p-5">
+
+          <h2 className="text-center mb-4">Top <span style={{color:"#6f2cf6"}}>Selling</span></h2> 
           
           <div className="row g-5">
             {courses.length > 0 ? (

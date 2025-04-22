@@ -30,7 +30,7 @@ function MilestoneTracker() {
             {/* Milestone Text */}
             <span className={activeMilestone === index ? "fw-bold text-primary" : "text-secondary"}>
               {milestone}
-              <p style={{fontSize:"13px", fontWeight:"400"}} className="mb-0"><i class="bi bi-camera-video"></i> VIDEO</p>
+              <p style={{fontSize:"13px", fontWeight:"400"}} className="mb-0"><i className="bi bi-camera-video"></i> VIDEO</p>
             </span>
           </div>
         ))}
